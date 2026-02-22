@@ -1,6 +1,6 @@
 # 📄 RAG Document Question Answering System
 
-A full-stack Retrieval-Augmented Generation (RAG) application that allows users to upload a document and ask contextual questions about it.
+A fullstack Retrieval Augmented Generation (RAG) application that allows users to upload a document and ask contextual questions about it.
 
 The system retrieves relevant document chunks using vector embeddings and generates grounded responses using a language model.
 
@@ -14,7 +14,7 @@ This project implements a basic RAG pipeline using:
 - **Backend:** FastAPI (Python)
 - **Embeddings:** OpenAI Embedding Model
 - **LLM:** OpenAI Chat Model
-- **Vector Storage:** In-memory list
+- **Vector Storage:** In memory list
 - **Similarity Metric:** Cosine similarity
 
 The goal is to answer user questions based only on the uploaded document context.
@@ -47,7 +47,7 @@ Return Answer to Frontend
 
 ## 🧠 How the RAG Flow Works
 
-This application follows the Retrieval-Augmented Generation approach:
+This application follows the Retrieval Augmented Generation approach:
 
 ### 1️⃣ Document Upload
 - The user uploads a document.
@@ -64,7 +64,7 @@ This application follows the Retrieval-Augmented Generation approach:
 
 ### 4️⃣ Retrieval
 - Cosine similarity is calculated between the question embedding and all stored document embeddings.
-- The top-k most relevant chunks are selected.
+- The top k most relevant chunks are selected.
 
 ### 5️⃣ Generation
 - The retrieved chunks are provided as context to the LLM.
@@ -86,7 +86,7 @@ Key responsibilities:
 
 FastAPI was chosen because:
 - Strong typing with Pydantic
-- Built-in validation
+- Built in validation
 - Automatic Swagger documentation
 - Strong ecosystem support for AI tooling
 
@@ -161,11 +161,11 @@ http://localhost:5173
 
 ## 📌 Assumptions & Shortcuts
 
-- Embeddings are stored in-memory (not persistent).
+- Embeddings are stored in memory (not persistent).
 - No database integration.
 - No authentication layer.
 - Basic text extraction (no advanced parsing).
-- Not optimized for large-scale production workloads.
+- Not optimized for large scale production workloads.
 
 This implementation focuses on demonstrating core RAG concepts clearly.
 
@@ -184,10 +184,10 @@ This implementation focuses on demonstrating core RAG concepts clearly.
 
 ## 🎯 Key Learnings
 
-- Implemented end-to-end RAG pipeline
+- Implemented end to end RAG pipeline
 - Learned FastAPI while transitioning from Node.js backend experience
-- Gained hands-on experience with embeddings and retrieval-based AI systems
-- Understood trade-offs between chunk size and retrieval accuracy
+- Gained hands on experience with embeddings and retrieval based AI systems
+- Understood trade offs between chunk size and retrieval accuracy
 
 ---
 
