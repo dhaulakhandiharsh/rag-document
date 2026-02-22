@@ -1,7 +1,4 @@
-"""
-Simple RAG: chunk text, embed, store in memory, retrieve and answer.
-Keeping it minimal - one file for the logic.
-"""
+
 from __future__ import annotations
 
 import re
@@ -22,7 +19,6 @@ def get_embedder():
 
 
 def chunk_text(text: str, chunk_size: int = 400, overlap: int = 50) -> List[str]:
-    """Split into overlapping chunks so we don't cut sentences in half."""
     paragraphs = re.split(r"\n\s*\n", text.strip())
     chunks = []
     current = []
