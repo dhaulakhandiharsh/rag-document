@@ -10,27 +10,24 @@ from dotenv import load_dotenv
 
 from rag import chunk_text, add_to_store, retrieve, answer_with_llm, clear_store
 
-load_dotenv()  # load variables from backend/.env if present
+load_dotenv()
 
 app = FastAPI(title="RAG API")
 
-# ✅ Only one allowed frontend origin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
 @app.get("/")
 def root():
     return {
-        "message": "RAG API is running. Use the frontend at http://localhost:5173.",
-        "docs": "http://localhost:8002/docs",
+        "message": "RAG API is running.",
+        "docs": "/docs",
     }
-
 
 @app.post("/upload")
 async def upload(
@@ -53,33 +50,24 @@ async def upload(
                 raise HTTPException(status_code=400, detail="Could not read PDF file.")
 
             if not content:
-                raise HTTPException(
-                    status_code=400,
-                    detail="PDF seems to have no extractable text."
-                )
+                raise HTTPException(status_code=400, detail="PDF seems to have no extractable text.")
         else:
             try:
                 content = body.decode("utf-8")
             except UnicodeDecodeError:
-                raise HTTPException(
-                    status_code=400,
-                    detail="File must be UTF-8 text."
-                )
+                raise HTTPException(status_code=400, detail="File must be UTF-8 text.")
 
     if text and text.strip():
         content = text.strip() if not content else content + "\n\n" + text.strip()
 
     if not content:
-        raise HTTPException(
-            status_code=400,
-            detail="Provide either a file or pasted text."
-        )
+        raise HTTPException(status_code=400, detail="Provide either a file or pasted text.")
 
+    clear_store()
     chunks = chunk_text(content)
     add_to_store(chunks)
 
     return {"status": "ok", "chunks_added": len(chunks)}
-
 
 @app.post("/query")
 async def query(question: str = Form(...)):
@@ -87,13 +75,12 @@ async def query(question: str = Form(...)):
         raise HTTPException(status_code=400, detail="Question is required.")
 
     chunks = retrieve(question.strip(), top_k=3)
-    answer, full_context = answer_with_llm(question.strip(), chunks)
+    answer, _ = answer_with_llm(question.strip(), chunks)
 
     return {
         "answer": answer,
         "sources": chunks,
     }
-
 
 @app.post("/clear")
 async def clear():
