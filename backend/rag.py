@@ -22,7 +22,7 @@ def chunk_text(text: str, chunk_size: int = 400) -> List[str]:
 
 def embed_text(text: str):
     response = client.models.embed_content(
-        model="embedding-001",
+        model="text-embedding-004",
         contents=[text]
     )
     return response.embeddings[0].values
