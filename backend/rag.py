@@ -2,11 +2,14 @@ from typing import List
 import os
 from dotenv import load_dotenv
 from google import genai
-import math
 
 load_dotenv()
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    raise RuntimeError("GEMINI_API_KEY is not set.")
+
+client = genai.Client(api_key=api_key)
 
 _store: List[dict] = []
 
@@ -19,10 +22,10 @@ def chunk_text(text: str, chunk_size: int = 400) -> List[str]:
 
 def embed_text(text: str):
     response = client.models.embed_content(
-        model="models/embedding-001",
-        contents=text
+        model="embedding-001",
+        contents=[text]
     )
-    return response.embedding
+    return response.embeddings[0].values
 
 def add_to_store(chunks: List[str]) -> None:
     for chunk in chunks:
@@ -35,11 +38,9 @@ def clear_store():
 
 def cosine_similarity(a, b):
     dot = sum(x * y for x, y in zip(a, b))
-    norm_a = math.sqrt(sum(x * x for x in a))
-    norm_b = math.sqrt(sum(y * y for y in b))
-    if norm_a == 0 or norm_b == 0:
-        return 0
-    return dot / (norm_a * norm_b)
+    norm_a = sum(x * x for x in a) ** 0.5
+    norm_b = sum(x * x for x in b) ** 0.5
+    return dot / (norm_a * norm_b + 1e-9)
 
 def retrieve(query: str, top_k: int = 3) -> List[str]:
     if not _store:
@@ -60,7 +61,7 @@ def answer_with_llm(question: str, context_chunks: List[str]):
 
     try:
         response = client.models.generate_content(
-            model="models/gemini-2.0-flash",
+            model="gemini-2.0-flash",
             contents=f"""
 Answer ONLY using the provided context.
 If answer not found, say: Error finding answer.
