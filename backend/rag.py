@@ -20,7 +20,7 @@ def chunk_text(text: str, chunk_size: int = 400) -> List[str]:
 def embed_text(text: str):
     response = client.models.embed_content(
         model="models/embedding-001",
-        content=text
+        contents=text
     )
     return response.embedding
 
