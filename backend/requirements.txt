@@ -3,5 +3,5 @@ uvicorn
 python-dotenv
 pypdf
 google-genai
-requests
+sentence-transformers
 python-multipart
