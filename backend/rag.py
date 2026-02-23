@@ -1,49 +1,42 @@
 from typing import List
-import math
 import os
+import math
 from dotenv import load_dotenv
-from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from google import genai
+import numpy as np
 
 load_dotenv()
 
-embedder = SentenceTransformer("all-MiniLM-L6-v2")
-
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-_store: List[dict] = []
+_store: List[str] = []
+_vectorizer = TfidfVectorizer()
+_vectors = None
 
 def chunk_text(text: str, chunk_size: int = 300) -> List[str]:
     words = text.split()
     return [" ".join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size)]
 
-def embed(text: str):
-    return embedder.encode(text).tolist()
-
-def cosine(a, b):
-    dot = sum(x*y for x,y in zip(a,b))
-    norm_a = math.sqrt(sum(x*x for x in a))
-    norm_b = math.sqrt(sum(x*x for x in b))
-    return dot / (norm_a*norm_b + 1e-9)
-
 def add_to_store(chunks: List[str]):
-    for chunk in chunks:
-        _store.append({
-            "text": chunk,
-            "embedding": embed(chunk)
-        })
+    global _store, _vectors
+    _store = chunks
+    _vectors = _vectorizer.fit_transform(_store)
 
 def clear_store():
-    global _store
+    global _store, _vectors
     _store = []
+    _vectors = None
 
 def retrieve(query: str, top_k: int = 3):
-    if not _store:
+    global _vectors
+    if not _store or _vectors is None:
         return []
-    q_emb = embed(query)
-    scored = [(cosine(q_emb, item["embedding"]), item["text"]) for item in _store]
-    scored.sort(reverse=True)
-    return [text for _, text in scored[:top_k]]
+
+    query_vec = _vectorizer.transform([query])
+    scores = (_vectors @ query_vec.T).toarray().flatten()
+    top_indices = np.argsort(scores)[::-1][:top_k]
+    return [_store[i] for i in top_indices]
 
 def answer_with_llm(question: str, chunks: List[str]):
     context = "\n\n".join(chunks)

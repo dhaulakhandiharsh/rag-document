@@ -3,5 +3,5 @@ uvicorn
 python-dotenv
 pypdf
 google-genai
-sentence-transformers
+scikit-learn
 python-multipart
