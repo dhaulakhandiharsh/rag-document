@@ -1,15 +1,15 @@
-# backend
+
+.venv/
+
 backend/venv/
 backend/__pycache__/
 backend/*.pyc
 backend/.env
 
-# frontend
+
 frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 
-# misc
 .DS_Store
 *.log
-
