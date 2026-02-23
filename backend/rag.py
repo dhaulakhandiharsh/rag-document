@@ -1,110 +1,69 @@
-from __future__ import annotations
-
-import re
-import os
 from typing import List
-import numpy as np
+import os
 from dotenv import load_dotenv
 from google import genai
+import math
 
 load_dotenv()
 
-_embedder = None
-
-
-def get_embedder():
-    global _embedder
-    if _embedder is None:
-        from sentence_transformers import SentenceTransformer
-        _embedder = SentenceTransformer("all-MiniLM-L6-v2")
-    return _embedder
-
-
-def chunk_text(text: str, chunk_size: int = 400, overlap: int = 50) -> List[str]:
-    paragraphs = re.split(r"\n\s*\n", text.strip())
-    chunks = []
-    current = []
-
-    for p in paragraphs:
-        p = p.strip()
-        if not p:
-            continue
-
-        if sum(len(s) for s in current) + len(p) > chunk_size and current:
-            chunk = "\n\n".join(current)
-            chunks.append(chunk)
-            current = []
-
-        if len(p) > chunk_size:
-            sentences = re.split(r"(?<=[.!?])\s+", p)
-            buf = []
-            for s in sentences:
-                if sum(len(x) for x in buf) + len(s) > chunk_size and buf:
-                    chunks.append(" ".join(buf))
-                    buf = []
-                buf.append(s)
-            if buf:
-                current = buf
-            continue
-
-        current.append(p)
-
-    if current:
-        chunks.append("\n\n".join(current))
-
-    return chunks if chunks else [text] if text.strip() else []
-
-
-def embed_chunks(chunks: List[str]) -> List[List[float]]:
-    model_local = get_embedder()
-    return model_local.encode(chunks).tolist()
-
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 _store: List[dict] = []
 
+def chunk_text(text: str, chunk_size: int = 400) -> List[str]:
+    words = text.split()
+    chunks = []
+    for i in range(0, len(words), chunk_size):
+        chunks.append(" ".join(words[i:i + chunk_size]))
+    return chunks
+
+def embed_text(text: str):
+    response = client.models.embed_content(
+        model="models/embedding-001",
+        content=text
+    )
+    return response.embedding
 
 def add_to_store(chunks: List[str]) -> None:
-    if not chunks:
-        return
-    embs = embed_chunks(chunks)
-    for t, e in zip(chunks, embs):
-        _store.append({"text": t, "embedding": e})
+    for chunk in chunks:
+        embedding = embed_text(chunk)
+        _store.append({"text": chunk, "embedding": embedding})
 
-
-def clear_store() -> None:
+def clear_store():
     global _store
     _store = []
 
-
-def cosine_sim(a: List[float], b: List[float]) -> float:
-    a_np = np.array(a)
-    b_np = np.array(b)
-    return float(np.dot(a_np, b_np) / (np.linalg.norm(a_np) * np.linalg.norm(b_np) + 1e-9))
-
+def cosine_similarity(a, b):
+    dot = sum(x * y for x, y in zip(a, b))
+    norm_a = math.sqrt(sum(x * x for x in a))
+    norm_b = math.sqrt(sum(y * y for y in b))
+    if norm_a == 0 or norm_b == 0:
+        return 0
+    return dot / (norm_a * norm_b)
 
 def retrieve(query: str, top_k: int = 3) -> List[str]:
     if not _store:
         return []
 
-    model_local = get_embedder()
-    q_emb = model_local.encode([query]).tolist()[0]
+    query_embedding = embed_text(query)
 
-    scored = [(cosine_sim(q_emb, d["embedding"]), d["text"]) for d in _store]
-    scored.sort(key=lambda x: -x[0])
+    scored = []
+    for item in _store:
+        score = cosine_similarity(query_embedding, item["embedding"])
+        scored.append((score, item["text"]))
 
+    scored.sort(key=lambda x: x[0], reverse=True)
     return [text for _, text in scored[:top_k]]
 
-def answer_with_llm(question: str, context_chunks: List[str]) -> tuple[str, str]:
-    context = "\n\n---\n\n".join(context_chunks) if context_chunks else "(No relevant text found.)"
+def answer_with_llm(question: str, context_chunks: List[str]):
+    context = "\n\n".join(context_chunks)
 
     try:
-        from google import genai
-        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-
-        prompt = f"""
-You are an AI assistant.
+        response = client.models.generate_content(
+            model="models/gemini-2.0-flash",
+            contents=f"""
 Answer ONLY using the provided context.
-If the context does not contain the answer, say: "Error finding answer."
+If answer not found, say: Error finding answer.
 
 Context:
 {context}
@@ -112,21 +71,7 @@ Context:
 Question:
 {question}
 """
-
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt
         )
-
         return response.text, context
-
     except Exception:
-        # Fallback if Gemini fails
-        if context_chunks:
-            fallback_answer = (
-                "LLM unavailable. Based on the document:\n\n"
-                + context[:800]
-            )
-            return fallback_answer, context
-        else:
-            return "No relevant information found.", context
+        return "LLM unavailable. Showing retrieved context.", context
