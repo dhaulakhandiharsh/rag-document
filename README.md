@@ -1,148 +1,138 @@
-# RAG Document Question Answering System
+🚀 RAG Document QA System
 
-A full stack Retrieval Augmented Generation application that allows users to upload a document and ask contextual questions about it.
+A full stack Retrieval Based Question Answering application that allows users to upload a document and ask contextual questions about it.
 
-The system retrieves relevant document chunks using semantic embeddings and generates grounded responses using a language model. If the LLM is unavailable due to quota or API issues, the system gracefully falls back to document based retrieval so the application continues working.
+The system retrieves relevant document chunks using vector similarity and returns answers strictly grounded in the uploaded content.
 
----
+🌐 Frontend deployed on Vercel
+⚙️ Backend deployed on Render
 
-## What This Project Does
+⸻
 
-This application implements a complete RAG pipeline:
+📌 What This Project Does
 
-1. User uploads a document  
-2. Backend extracts and chunks the text  
-3. Each chunk is converted into a semantic embedding  
-4. Embeddings are stored in memory  
-5. User question is embedded  
-6. Top relevant chunks are retrieved using cosine similarity  
-7. Context is passed to the language model  
-8. Answer is returned to the frontend  
+This application implements a simplified RAG style pipeline:
 
-The response is grounded strictly in the uploaded document.
+1️⃣ User uploads a document (Text or PDF)
+2️⃣ Backend extracts and chunks the text
+3️⃣ Each chunk is converted into a TF IDF vector
+4️⃣ Vectors are stored in memory
+5️⃣ User submits a question
+6️⃣ Question is vectorized using the same model
+7️⃣ Cosine similarity is calculated
+8️⃣ Most relevant chunk is returned as the answer
 
----
+✅ The response is strictly based on the uploaded document
+✅ No hallucinations
+✅ No external LLM dependency
 
-## Tech Stack
+⸻
 
-### Frontend
-React  
-Vite  
-Axios  
+🛠 Tech Stack
 
-### Backend
-FastAPI  
-Uvicorn  
-Sentence Transformers  
-NumPy  
-Python dotenv  
+🎨 Frontend
 
-### Language Model
-Google Gemini API  
+React
+Vite
+Fetch API
 
-### Retrieval
-In memory vector store  
-Cosine similarity search  
+⸻
 
----
+⚙️ Backend
 
-## How The RAG Pipeline Works
+FastAPI
+Uvicorn
+pypdf
+scikit learn
+NumPy
+Python 3
 
-### Document Upload
-The user uploads a PDF or pastes text.  
-The backend extracts raw text from the file.  
-The text is split into manageable chunks.
+⸻
 
-### Embedding Generation
-Each chunk is converted into a dense vector using a sentence transformer model.  
-These embeddings are stored in memory for similarity search.
+🔎 Retrieval
 
-### Question Processing
-The user submits a question.  
-The question is embedded using the same embedding model.
+In memory vector store
+Cosine similarity search
 
-### Retrieval
-Cosine similarity is calculated between the question embedding and stored document embeddings.  
-Top relevant chunks are selected.
+⸻
 
-### Answer Generation
-The retrieved chunks are provided as context to Gemini.  
-The LLM generates a response strictly based on the provided context.
+☁️ Deployment
 
-If the Gemini API is unavailable due to quota or key issues, the system falls back to returning the most relevant document content instead of failing.
+Vercel for frontend
+Render for backend
 
----
+⸻
 
-## Why This Project Matters
+🧠 How The Retrieval Works
 
-This project demonstrates:
+📄 Document is split into chunks of approximately 300 words
 
-- Understanding of Retrieval Augmented Generation  
-- Semantic search using embeddings  
-- Vector similarity scoring  
-- Full stack integration between React and FastAPI  
-- Graceful API failure handling  
-- Clean modular backend design  
+📊 Each chunk is converted into a TF IDF vector representation
 
----
+❓ When a question is asked:
 
-## Running Locally
+• The question is converted into a vector
+• Cosine similarity is computed between the question vector and stored chunk vectors
+• The top matching chunk is returned
 
-### Clone Repository
+🎯 This ensures the answer always comes directly from the uploaded document.
 
-```bash
+⸻
+
+💻 Running Locally
+Clone the repository:
 git clone git@github.com:dhaulakhandiharsh/rag-document.git
 cd rag-document
 
-
----
-
-## Running Locally
-
-### Clone Repository
-
-```bash
-git clone git@github.com:dhaulakhandiharsh/rag-document.git
-cd rag-document
-```
-
-### Backend Setup
-
-```bash
+⚙️ Backend Setup
 cd backend
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-```
+uvicorn main:app --reload --port 8003
+Backend runs at
+http://localhost:8003
 
-Create a `.env` file inside backend:
+Swagger documentation
+http://localhost:8003/docs
 
-```
-GEMINI_API_KEY=your_api_key_here
-```
+⸻
 
-Run backend:
+🎨 Frontend Setup
 
-```bash
-uvicorn main:app --reload --port 8002
-```
-
-Backend runs at:
-http://localhost:8002
-
-Swagger documentation:
-http://localhost:8002/docs
-
----
-
-### Frontend Setup
-
-```bash
+In a new terminal:
 cd frontend
 npm install
 npm run dev
-```
-
-Frontend runs at:
+Frontend runs at
 http://localhost:5173
+
+⸻
+
+🧪 Usage
+
+1️⃣ Open the frontend in your browser
+2️⃣ Upload a text or PDF document
+3️⃣ Ask a question related to the document
+4️⃣ The system retrieves the most relevant chunk and displays it along with the source text used
+
+⸻
+
+⭐ Key Highlights
+
+✔ Full stack architecture using React and FastAPI
+✔ Custom vector similarity implementation
+✔ Clean modular backend design
+✔ Production deployment on Vercel and Render
+✔ Grounded answers without relying on external LLM APIs
+
+⸻
+
+🎯 What This Demonstrates
+
+• Understanding of Retrieval Augmented Generation concepts
+• Practical implementation of vector search
+• Backend API design with FastAPI
+• Frontend backend integration
+• Real world deployment experience
 
