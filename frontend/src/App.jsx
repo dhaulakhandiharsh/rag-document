@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 
-// Use proxy so we don't hit CORS – see vite.config.js (backend must match target port)
-const API = '/api'
+const API = import.meta.env.VITE_API_URL || '/api'
 
 export default function App() {
   const [pastedText, setPastedText] = useState('')
@@ -25,17 +24,26 @@ export default function App() {
     e.preventDefault()
     setError('')
     setUploadStatus('')
+
     const form = new FormData()
     if (file) form.append('file', file)
     if (pastedText.trim()) form.append('text', pastedText.trim())
+
     if (!file && !pastedText.trim()) {
       setError('Add a file or paste some text.')
       return
     }
+
     try {
-      const res = await fetch(`${API}/upload`, { method: 'POST', body: form })
+      const res = await fetch(`${API}/upload`, {
+        method: 'POST',
+        body: form,
+      })
+
       const data = await res.json()
+
       if (!res.ok) throw new Error(data.detail || 'Upload failed')
+
       setUploadStatus(`Uploaded. ${data.chunks_added} chunks added.`)
       setFile(null)
       setPastedText('')
@@ -49,14 +57,24 @@ export default function App() {
     setError('')
     setAnswer('')
     setSources([])
+
     if (!question.trim()) return
+
     setLoading(true)
+
     try {
       const form = new FormData()
       form.append('question', question.trim())
-      const res = await fetch(`${API}/query`, { method: 'POST', body: form })
+
+      const res = await fetch(`${API}/query`, {
+        method: 'POST',
+        body: form,
+      })
+
       const data = await res.json()
+
       if (!res.ok) throw new Error(data.detail || 'Query failed')
+
       setAnswer(data.answer)
       setSources(data.sources || [])
     } catch (err) {
@@ -69,10 +87,14 @@ export default function App() {
   return (
     <>
       <h1>RAG Demo – Ask questions about your document</h1>
-      {backendOk === true && <p className="backend-status ok">Backend connected.</p>}
+
+      {backendOk === true && (
+        <p className="backend-status ok">Backend connected.</p>
+      )}
+
       {backendOk === false && (
         <p className="backend-status fail">
-          Cannot reach backend. Start it: in <code>backend/</code> run <code>source venv/bin/activate && uvicorn main:app --reload --port 8003</code>
+          Cannot reach backend.
         </p>
       )}
 
@@ -84,16 +106,19 @@ export default function App() {
             value={pastedText}
             onChange={(e) => setPastedText(e.target.value)}
             rows={4}
-            placeholder="Or upload a .txt file below"
+            placeholder="Or upload a .txt or .pdf file below"
           />
+
           <label>Or choose a text/PDF file</label>
           <input
             type="file"
             accept=".txt,.pdf,text/plain,application/pdf"
             onChange={(e) => setFile(e.target.files?.[0] || null)}
           />
+
           <button type="submit">Upload</button>
         </form>
+
         {uploadStatus && <p>{uploadStatus}</p>}
       </section>
 
@@ -107,7 +132,10 @@ export default function App() {
             placeholder="e.g. What is the main idea?"
             disabled={loading}
           />
-          <button type="submit" disabled={loading}>{loading ? '...' : 'Ask'}</button>
+
+          <button type="submit" disabled={loading}>
+            {loading ? '...' : 'Ask'}
+          </button>
         </form>
       </section>
 
@@ -126,7 +154,8 @@ export default function App() {
           <div id="sources">
             {sources.map((src, i) => (
               <div key={i} className="source-block">
-                <strong>Chunk {i + 1}:</strong><br />
+                <strong>Chunk {i + 1}:</strong>
+                <br />
                 {src}
               </div>
             ))}
