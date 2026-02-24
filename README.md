@@ -14,12 +14,19 @@ The system retrieves relevant document chunks using vector similarity and return
 This application implements a simplified RAG style pipeline:
 
 1️⃣ User uploads a document (Text or PDF)
+
 2️⃣ Backend extracts and chunks the text
+
 3️⃣ Each chunk is converted into a TF IDF vector
+
 4️⃣ Vectors are stored in memory
+
 5️⃣ User submits a question
+
 6️⃣ Question is vectorized using the same model
+
 7️⃣ Cosine similarity is calculated
+
 8️⃣ Most relevant chunk is returned as the answer
 
 ✅ The response is strictly based on the uploaded document
